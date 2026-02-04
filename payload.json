@@ -1,0 +1,15 @@
+{
+    "random": false,
+    "first_come_first": true,
+    "queue_points": true,
+    "min_area": "48",
+    "max_rent": "13000",
+    "min_room": "2",
+    "sorting": "publish_date.desc",
+    "geo_bounds": {
+        "min_lat": 59.21035478148261,
+        "max_lat": 59.45705110864935,
+        "min_lng": 17.636063941337966,
+        "max_lng": 18.325626058662294
+    }
+}
