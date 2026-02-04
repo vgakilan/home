@@ -10,21 +10,8 @@ HOMEQ_URL = "https://api.homeq.se/api/v3/search"
 HOMEQ_BASE = "https://homeq.se"
 STATE_FILE = "seen.json"
 
-PAYLOAD = {
-    "random": False,
-    "first_come_first": True,
-    "queue_points": True,
-    "min_area": "48",
-    "max_rent": "13000",
-    "min_room": "2",
-    "sorting": "publish_date.desc",
-    "geo_bounds": {
-        "min_lat": 59.21035478148261,
-        "max_lat": 59.45705110864935,
-        "min_lng": 17.636063941337966,
-        "max_lng": 18.325626058662294
-    }
-}
+with open("payload.json", "r", encoding="utf-8") as f:
+    PAYLOAD = json.load(f)
 
 HEADERS = {"content-type": "application/json"}
 
