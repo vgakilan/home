@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-
 HOMEQ_URL = "https://api.homeq.se/api/v3/search"
 HOMEQ_BASE = "https://homeq.se"
 STATE_FILE = "seen.json"
@@ -20,19 +19,19 @@ PAYLOAD = {
     "min_room": "2",
     "sorting": "publish_date.desc",
     "geo_bounds": {
-        "min_lat": 59.2526,
-        "max_lat": 59.3608,
-        "min_lng": 17.9708,
-        "max_lng": 18.1828
+        "min_lat": 59.21035478148261,
+        "max_lat": 59.45705110864935,
+        "min_lng": 17.636063941337966,
+        "max_lng": 18.325626058662294
     }
 }
 
 HEADERS = {"content-type": "application/json"}
 
-# Provision for multiple chat ids later:
-# set TELEGRAM_CHAT_ID="123,456" and it will send to both.
 BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 CHAT_IDS = [c.strip() for c in os.environ["TELEGRAM_CHAT_ID"].split(",") if c.strip()]
+
+MAX_TG_LEN = 3900
 
 
 def load_seen() -> set[int]:
@@ -60,8 +59,7 @@ def save_seen(seen: set[int]) -> None:
 def fetch_results() -> list[dict]:
     r = requests.post(HOMEQ_URL, headers=HEADERS, json=PAYLOAD, timeout=20)
     r.raise_for_status()
-    data = r.json()
-    return data.get("results", [])
+    return r.json().get("results", [])
 
 
 def yn(v: bool) -> str:
@@ -81,33 +79,34 @@ def format_item(it: dict) -> str:
     link = f"{HOMEQ_BASE}{uri}" if uri else ""
 
     parts = [
-        f"{title}",
-        f"{rooms} rum • {area} m²" if rooms is not None and area is not None else "",
-        f"Rent: {rent} kr" if rent is not None else "",
+        title,
+        f"{rooms} rum • {area} m²" if rooms and area else "",
+        f"Rent: {rent} kr" if rent else "",
         f"Move-in: {date_access}" if date_access else "",
-        f"Area: {municipality} / {city}".strip(" /") if (municipality or city) else "",
+        f"Area: {municipality} / {city}".strip(" /") if municipality or city else "",
         f"Short lease: {short_lease}",
         link,
     ]
-    return "\n".join([p for p in parts if p])
+    return "\n".join(p for p in parts if p)
 
 
 def send_telegram(chat_id: str, text: str) -> None:
     url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": chat_id,
-        "text": text,
-        "disable_web_page_preview": True,
-    }
-    r = requests.post(url, json=payload, timeout=20)
-    r.raise_for_status()
+
+    for i in range(0, len(text), MAX_TG_LEN):
+        payload = {
+            "chat_id": chat_id,
+            "text": text[i:i + MAX_TG_LEN],
+            "disable_web_page_preview": True,
+        }
+        r = requests.post(url, json=payload, timeout=20)
+        r.raise_for_status()
 
 
 def main():
     seen = load_seen()
     results = fetch_results()
 
-    # Only individual
     results = [it for it in results if it.get("type") == "individual"]
 
     new_items = []
@@ -120,13 +119,13 @@ def main():
         print("No new individual listings.")
         return
 
-    # Save state first
     for it in new_items:
         seen.add(it["id"])
     save_seen(seen)
 
-    # Send one grouped message per run
-    msg = "HomeQ: new listings\n\n" + "\n\n---\n\n".join(format_item(it) for it in new_items)
+    msg = "HomeQ: new listings\n\n" + "\n\n---\n\n".join(
+        format_item(it) for it in new_items
+    )
 
     for chat_id in CHAT_IDS:
         send_telegram(chat_id, msg)
