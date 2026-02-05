@@ -1,15 +1,20 @@
 {
-    "random": false,
+    "random": true,
     "first_come_first": true,
     "queue_points": true,
-    "min_area": "48",
+    "min_area  ": "50",
     "max_rent": "13000",
     "min_room": "2",
+    "tags": [
+        "everyone"
+    ],
+    "short_lease": false,
+    "card_type": "normal",
     "sorting": "publish_date.desc",
     "geo_bounds": {
-        "min_lat": 59.21035478148261,
-        "max_lat": 59.45705110864935,
-        "min_lng": 17.636063941337966,
-        "max_lng": 18.325626058662294
+        "min_lat": 59.10503716047819,
+        "min_lng": 17.719895253456855,
+        "max_lat": 59.56128480525706,
+        "max_lng": 18.241794746544997
     }
 }
